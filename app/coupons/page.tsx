@@ -57,9 +57,8 @@ export default function CouponsPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          creator_id: user.id,
-          amount_friendcoins: friendcoins,
-          amount_friendship_fractions: friendshipFractions,
+          user_id: user.id,
+          amount: friendcoins.friendshipFractions
           description: createForm.description,
           expires_in_hours: Number.parseInt(createForm.expiresIn),
         }),
