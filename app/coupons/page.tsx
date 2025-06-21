@@ -72,7 +72,7 @@ export default function CouponsPage() {
 
       if (response.ok) {
         setGeneratedCoupon(data.coupon_code)
-        setMessage(`Coupon created successfully! Code: ${data.coupon_code}`)
+        setMessage(`Coupon created successfully! Code: ${data.code || null}`)
         setCreateForm({ amount: "", description: "", expiresIn: "24" })
       } else {
         setMessage(data.error || "Error creating coupon")
@@ -99,7 +99,7 @@ export default function CouponsPage() {
         },
         body: JSON.stringify({
           user_id: user.id,
-          coupon_code: redeemForm.code,
+          code: redeemForm.code,
         }),
       })
 
