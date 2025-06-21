@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase"
-import { stackServerApp } from "@stack"
+import { stackServerApp } from "@/stack"
 
 export async function POST(request: NextRequest) {
   try {
