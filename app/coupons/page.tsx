@@ -24,10 +24,14 @@ export default function CouponsPage() {
     expiresIn: "24",
   })
 
+
   // Redeem coupon form
   const [redeemForm, setRedeemForm] = useState({
     code: "",
   })
+
+  const [friendcoins, setFriendcoins] = useState(0)
+  const [friendshipFractions, setFriendshipFractions] = useState(0)
 
   const [generatedCoupon, setGeneratedCoupon] = useState<string | null>(null)
 
@@ -58,7 +62,7 @@ export default function CouponsPage() {
         },
         body: JSON.stringify({
           user_id: user.id,
-          amount: `${amount.friendcoins}.${amount.friendshipFractions.toString().padStart(2, "0")}f€`,
+          amount: `${friendcoins}.${(friendshipFractions || 0).toString().padStart(2, '0')}f€`,
           description: createForm.description,
           expires_in_hours: Number.parseInt(createForm.expiresIn),
         }),
