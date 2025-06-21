@@ -1,10 +1,10 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase"
-import { getUser } from "@stackframe/stack"
+import { stackServerApp } from "@stack"
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await getUser()
+    const user = await stackServerApp.getUser()
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
