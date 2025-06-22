@@ -210,7 +210,7 @@ export default function InvestPage() {
         body: JSON.stringify({
           user_id: user.id,
           investment_id: investment.id,
-          amount: `${withdrawalAmount}f€` 
+          shares_to_sell: `${withdrawalAmount}f€` 
         }),
       })
 
