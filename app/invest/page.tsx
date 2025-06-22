@@ -210,7 +210,7 @@ export default function InvestPage() {
         body: JSON.stringify({
           user_id: user.id,
           investment_id: investment.id,
-          amount: `${friendcoins}.${(friendshipFractions || 0).toString().padStart(2, '0')}f€` 
+          amount: `${withdrawalAmount}f€` 
         }),
       })
 
