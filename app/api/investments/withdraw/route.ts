@@ -1,3 +1,4 @@
+// In the Next.js API Route (/api/investments/withdraw):
 import { type NextRequest, NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase"
 import { stackServerApp } from "@/stack"
@@ -12,7 +13,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { investment_id, shares_to_sell } = body
 
-    if (!investment_id || !shares_to_sell || shares_to_sell <= 0) {
+    if (!investment_id || !shares_to_sell || isNaN(shares_to_sell) || shares_to_sell <= 0) { // Check if shares_to_sell is a number
       return NextResponse.json({ error: "Investment ID and valid shares amount required" }, { status: 400 })
     }
 
