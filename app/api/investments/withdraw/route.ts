@@ -1,4 +1,3 @@
-// In the Next.js API Route (/api/investments/withdraw):
 import { type NextRequest, NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase"
 import { stackServerApp } from "@/stack"
@@ -116,7 +115,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       shares_sold: shares_to_sell,
-      sale_value: `${friendcoins}.${friendshipFractions.padStart(2, "0")}f€`,
+      sale_value: `${friendcoins}.${String(friendshipFractions).padStart(2, "0")}f€`,
       remaining_shares: remainingShares,
       message: `Successfully sold ${shares_to_sell} shares of ${investment.stock_symbol}`,
     })

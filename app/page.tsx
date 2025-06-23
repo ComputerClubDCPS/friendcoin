@@ -91,7 +91,7 @@ export default function HomePage() {
               <CardTitle>Instant Transfers</CardTitle>
             </CardHeader>
             <CardContent>
-              <CardDescription>Send money instantly to other users with just their Stack User ID</CardDescription>
+              <CardDescription>Send money instantly to other users with just their account ID</CardDescription>
             </CardContent>
           </Card>
 
