@@ -44,6 +44,7 @@ export async function POST(request: NextRequest) {
       if (typeof amount === "string") {
         // Remove f€ symbol if present and parse
         const cleanAmount = amount.replace(/f€?/g, "").trim();
+          console.log("parseCurrency called with:", cleanAmount);
         transferAmount = parseCurrency(cleanAmount);
       } else if (typeof amount === "number") {
         transferAmount = createCurrencyAmount(amount); // Use helper function
