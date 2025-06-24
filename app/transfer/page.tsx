@@ -74,7 +74,7 @@ export default function TransferPage() {
         },
         body: JSON.stringify({
           recipientId,
-          amount: '${amount || 0.00}f€',
+          amount: amount, // Send the amount as is (string or number)
           notes,
         }),
       });
