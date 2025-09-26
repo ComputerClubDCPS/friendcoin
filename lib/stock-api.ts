@@ -12,156 +12,113 @@ export interface StockData {
 
 export async function searchStocks(query: string): Promise<StockData[]> {
   if (!ALPHA_VANTAGE_API_KEY) {
-    console.warn('Alpha Vantage API key not configured, using mock data')
-    return getMockStocks(query)
+    throw new Error("Alpha Vantage API key not configured")
   }
 
   try {
     const response = await fetch(
-      `https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords=${encodeURIComponent(query)}&apikey=${ALPHA_VANTAGE_API_KEY}`
+      `https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords=${encodeURIComponent(query)}&apikey=${ALPHA_VANTAGE_API_KEY}`,
     )
-    
+
     const data = await response.json()
-    
-    if (data['Error Message'] || data['Note']) {
-      console.warn('Alpha Vantage API limit reached, using mock data')
-      return getMockStocks(query)
+
+    if (data["Error Message"]) {
+      throw new Error(data["Error Message"])
     }
-    
+
+    if (data["Note"]) {
+      throw new Error("API rate limit exceeded")
+    }
+
     const matches = data.bestMatches || []
-    
-    return matches.slice(0, 10).map((match: any) => ({
-      symbol: match['1. symbol'],
-      name: match['2. name'],
-      price: 0, // Will be fetched separately
-      change: 0,
-      changePercent: 0,
-    }))
+
+    // Get current prices for each stock
+    const stocksWithPrices = await Promise.all(
+      matches.slice(0, 10).map(async (match: any) => {
+        const priceData = await getStockPrice(match["1. symbol"])
+        return (
+          priceData || {
+            symbol: match["1. symbol"],
+            name: match["2. name"],
+            price: 0,
+            change: 0,
+            changePercent: 0,
+          }
+        )
+      }),
+    )
+
+    return stocksWithPrices
   } catch (error) {
-    console.error('Error searching stocks:', error)
-    return getMockStocks(query)
+    console.error("Error searching stocks:", error)
+    throw error
   }
 }
 
 export async function getStockPrice(symbol: string): Promise<StockData | null> {
   if (!ALPHA_VANTAGE_API_KEY) {
-    console.warn('Alpha Vantage API key not configured, using mock data')
-    return getMockStock(symbol)
+    throw new Error("Alpha Vantage API key not configured")
   }
 
   try {
     const response = await fetch(
-      `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${ALPHA_VANTAGE_API_KEY}`
+      `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${ALPHA_VANTAGE_API_KEY}`,
     )
-    
+
     const data = await response.json()
-    
-    if (data['Error Message'] || data['Note']) {
-      console.warn('Alpha Vantage API limit reached, using mock data')
-      return getMockStock(symbol)
+
+    if (data["Error Message"]) {
+      throw new Error(data["Error Message"])
     }
-    
-    const quote = data['Global Quote']
-    
+
+    if (data["Note"]) {
+      throw new Error("API rate limit exceeded")
+    }
+
+    const quote = data["Global Quote"]
+
     if (!quote) {
-      return getMockStock(symbol)
+      return null
     }
-    
+
     return {
-      symbol: quote['01. symbol'],
-      name: quote['01. symbol'], // Alpha Vantage doesn't provide company name in this endpoint
-      price: parseFloat(quote['05. price']),
-      change: parseFloat(quote['09. change']),
-      changePercent: parseFloat(quote['10. change percent'].replace('%', '')),
-      volume: parseInt(quote['06. volume']),
+      symbol: quote["01. symbol"],
+      name: quote["01. symbol"], // Alpha Vantage doesn't provide company name in this endpoint
+      price: Number.parseFloat(quote["05. price"]),
+      change: Number.parseFloat(quote["09. change"]),
+      changePercent: Number.parseFloat(quote["10. change percent"].replace("%", "")),
+      volume: Number.parseInt(quote["06. volume"]),
     }
   } catch (error) {
-    console.error('Error fetching stock price:', error)
-    return getMockStock(symbol)
+    console.error("Error fetching stock price:", error)
+    throw error
   }
 }
 
-// Mock data fallback
-const MOCK_STOCKS: Record<string, StockData> = {
-  AAPL: {
-    symbol: "AAPL",
-    name: "Apple Inc.",
-    price: 170.22,
-    change: 2.15,
-    changePercent: 1.28,
-    volume: 45234567,
-    marketCap: "2.65T"
-  },
-  GOOGL: {
-    symbol: "GOOGL",
-    name: "Alphabet Inc.",
-    price: 138.15,
-    change: -1.23,
-    changePercent: -0.88,
-    volume: 23456789,
-    marketCap: "1.75T"
-  },
-  MSFT: {
-    symbol: "MSFT",
-    name: "Microsoft Corporation",
-    price: 378.85,
-    change: 4.56,
-    changePercent: 1.22,
-    volume: 34567890,
-    marketCap: "2.81T"
-  },
-  TSLA: {
-    symbol: "TSLA",
-    name: "Tesla, Inc.",
-    price: 248.50,
-    change: -8.75,
-    changePercent: -3.40,
-    volume: 67890123,
-    marketCap: "789B"
-  },
-  AMZN: {
-    symbol: "AMZN",
-    name: "Amazon.com Inc.",
-    price: 145.80,
-    change: 1.89,
-    changePercent: 1.31,
-    volume: 45678901,
-    marketCap: "1.52T"
-  },
-  NVDA: {
-    symbol: "NVDA",
-    name: "NVIDIA Corporation",
-    price: 875.50,
-    change: 12.34,
-    changePercent: 1.43,
-    volume: 56789012,
-    marketCap: "2.16T"
+export async function getDailyStockData(symbol: string): Promise<any> {
+  if (!ALPHA_VANTAGE_API_KEY) {
+    throw new Error("Alpha Vantage API key not configured")
   }
-}
 
-function getMockStocks(query: string): StockData[] {
-  return Object.values(MOCK_STOCKS)
-    .filter(stock => 
-      stock.symbol.toLowerCase().includes(query.toLowerCase()) ||
-      stock.name.toLowerCase().includes(query.toLowerCase())
+  try {
+    const response = await fetch(
+      `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${symbol}&apikey=${ALPHA_VANTAGE_API_KEY}`,
     )
-    .map(stock => ({
-      ...stock,
-      price: stock.price + (Math.random() - 0.5) * 10,
-      change: (Math.random() - 0.5) * 5,
-      changePercent: (Math.random() - 0.5) * 3,
-    }))
-}
 
-function getMockStock(symbol: string): StockData | null {
-  const stock = MOCK_STOCKS[symbol.toUpperCase()]
-  if (!stock) return null
-  
-  return {
-    ...stock,
-    price: stock.price + (Math.random() - 0.5) * 10,
-    change: (Math.random() - 0.5) * 5,
-    changePercent: (Math.random() - 0.5) * 3,
+    const data = await response.json()
+
+    if (data["Error Message"]) {
+      throw new Error(data["Error Message"])
+    }
+
+    if (data["Note"]) {
+      throw new Error("API rate limit exceeded")
+    }
+
+    return data["Time Series (Daily)"]
+  } catch (error) {
+    console.error("Error fetching daily stock data:", error)
+    throw error
   }
 }
 

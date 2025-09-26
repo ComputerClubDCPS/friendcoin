@@ -1,0 +1,16 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/debt-management",
+      "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/stock-updates",
+      "schedule": "0 1 * * *"
+    },
+    {
+      "path": "/api/cron/interest-payments",
+      "schedule": "0 3 * * 0"
+    }
+  ]
+}

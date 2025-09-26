@@ -1,58 +1,61 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabase";
-import { stackServerApp } from "@/stack";
-import {
-  parseCurrency,
-  subtractCurrency,
-  addCurrency,
-  calculateTax,
-  type CurrencyAmount,
-} from "@/lib/currency";
+import { type NextRequest, NextResponse } from "next/server"
+import { supabaseAdmin } from "@/lib/supabase"
+import { stackServerApp } from "@/stack"
+import { parseCurrency, subtractCurrency, addCurrency, calculateTax, type CurrencyAmount } from "@/lib/currency"
 
 // Helper function to create a CurrencyAmount from a number
 function createCurrencyAmount(amount: number): CurrencyAmount {
-  const friendcoins = Math.floor(amount);
-  const friendshipFractions = Math.round((amount - friendcoins) * 100); // Round to nearest fraction
+  const friendcoins = Math.floor(amount)
+  const friendshipFractions = Math.round((amount - friendcoins) * 100) // Round to nearest fraction
   if (friendshipFractions < 0) {
     return {
       friendcoins: 0,
       friendshipFractions: 0,
-    };
+    }
   }
   return {
     friendcoins: friendcoins,
     friendshipFractions: friendshipFractions,
-  };
+  }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await stackServerApp.getUser();
+    const user = await stackServerApp.getUser()
     if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const { recipientId, amount, notes } = await request.json();
+    const { recipientId, amount, notes } = await request.json()
 
     if (!recipientId || amount === undefined || amount === null) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+      return NextResponse.json({ error: "Missing required fields" }, { status: 400 })
     }
 
-    let transferAmount: CurrencyAmount;
+    let transferAmount: CurrencyAmount
 
     try {
       if (typeof amount === "string") {
-        // Remove f€ symbol if present and parse
-        const cleanAmount = amount.replace(/f€?/g, "").trim();
-          console.log("parseCurrency called with:", cleanAmount);
-        transferAmount = parseCurrency(cleanAmount);
+        const cleanAmount = amount
+          .replace(/[f€$,\s]/g, "") // Remove currency symbols, commas, and spaces
+          .replace(/[^\d.]/g, "") // Keep only digits and decimal points
+          .trim()
+
+        console.log("[v0] Parsing amount:", amount, "->", cleanAmount)
+
+        if (!cleanAmount || isNaN(Number.parseFloat(cleanAmount))) {
+          return NextResponse.json({ error: "Invalid amount format" }, { status: 400 })
+        }
+
+        transferAmount = parseCurrency(cleanAmount)
       } else if (typeof amount === "number") {
-        transferAmount = createCurrencyAmount(amount); // Use helper function
+        transferAmount = createCurrencyAmount(amount) // Use helper function
       } else {
-        return NextResponse.json({ error: "Invalid amount format" }, { status: 400 });
+        return NextResponse.json({ error: "Invalid amount format" }, { status: 400 })
       }
     } catch (error) {
-      return NextResponse.json({ error: "Invalid amount format" }, { status: 400 });
+      console.log("[v0] Currency parsing error:", error)
+      return NextResponse.json({ error: "Invalid amount format" }, { status: 400 })
     }
 
     // Get sender's current balance
@@ -60,26 +63,26 @@ export async function POST(request: NextRequest) {
       .from("users")
       .select("*")
       .eq("stack_user_id", user.id)
-      .single();
+      .single()
 
     if (senderError) {
-      return NextResponse.json({ error: "Error fetching your account data" }, { status: 400 });
+      return NextResponse.json({ error: "Error fetching your account data" }, { status: 400 })
     }
 
     const senderBalance: CurrencyAmount = {
       friendcoins: senderData.balance_friendcoins,
       friendshipFractions: senderData.balance_friendship_fractions,
-    };
+    }
 
     // Calculate tax (5%)
-    const tax = calculateTax(transferAmount);
-    const totalDeduction = addCurrency(transferAmount, tax);
+    const tax = calculateTax(transferAmount)
+    const totalDeduction = addCurrency(transferAmount, tax)
 
     // Check if sender has sufficient funds
     try {
-      subtractCurrency(senderBalance, totalDeduction);
+      subtractCurrency(senderBalance, totalDeduction)
     } catch {
-      return NextResponse.json({ error: "Insufficient funds for this transfer" }, { status: 400 });
+      return NextResponse.json({ error: "Insufficient funds for this transfer" }, { status: 400 })
     }
 
     // Get recipient data
@@ -87,19 +90,19 @@ export async function POST(request: NextRequest) {
       .from("users")
       .select("*")
       .eq("stack_user_id", recipientId)
-      .single();
+      .single()
 
     if (recipientError) {
-      return NextResponse.json({ error: "Recipient not found" }, { status: 404 });
+      return NextResponse.json({ error: "Recipient not found" }, { status: 404 })
     }
 
     // Perform the transaction
-    const newSenderBalance = subtractCurrency(senderBalance, totalDeduction);
+    const newSenderBalance = subtractCurrency(senderBalance, totalDeduction)
     const recipientBalance: CurrencyAmount = {
       friendcoins: recipientData.balance_friendcoins,
       friendshipFractions: recipientData.balance_friendship_fractions,
-    };
-    const newRecipientBalance = addCurrency(recipientBalance, transferAmount);
+    }
+    const newRecipientBalance = addCurrency(recipientBalance, transferAmount)
 
     // Update balances in a transaction
     const { error: updateSenderError } = await supabaseAdmin
@@ -109,10 +112,10 @@ export async function POST(request: NextRequest) {
         balance_friendship_fractions: newSenderBalance.friendshipFractions,
         updated_at: new Date().toISOString(),
       })
-      .eq("stack_user_id", user.id);
+      .eq("stack_user_id", user.id)
 
     if (updateSenderError) {
-      return NextResponse.json({ error: "Error updating your balance" }, { status: 500 });
+      return NextResponse.json({ error: "Error updating your balance" }, { status: 500 })
     }
 
     const { error: updateRecipientError } = await supabaseAdmin
@@ -122,10 +125,10 @@ export async function POST(request: NextRequest) {
         balance_friendship_fractions: newRecipientBalance.friendshipFractions,
         updated_at: new Date().toISOString(),
       })
-      .eq("stack_user_id", recipientId);
+      .eq("stack_user_id", recipientId)
 
     if (updateRecipientError) {
-      return NextResponse.json({ error: "Error updating recipient balance" }, { status: 500 });
+      return NextResponse.json({ error: "Error updating recipient balance" }, { status: 500 })
     }
 
     // Record the transaction
@@ -138,10 +141,10 @@ export async function POST(request: NextRequest) {
       transaction_type: "transfer",
       status: "completed",
       notes: notes || null,
-    });
+    })
 
     if (transactionError) {
-      console.error("Error recording transaction:", transactionError);
+      console.error("Error recording transaction:", transactionError)
     }
 
     // Update recent transfers
@@ -157,19 +160,19 @@ export async function POST(request: NextRequest) {
         onConflict: "from_user_id,to_user_id",
         ignoreDuplicates: false,
       },
-    );
+    )
 
     if (recentTransferError) {
-      console.error("Error updating recent transfers:", recentTransferError);
+      console.error("Error updating recent transfers:", recentTransferError)
     }
 
     return NextResponse.json({
       success: true,
       message: `Successfully sent ${transferAmount.friendcoins}.${transferAmount.friendshipFractions.toString().padStart(2, "0")}f€ to ${recipientData.display_name || recipientId}`,
       tax: `${tax.friendcoins}.${tax.friendshipFractions.toString().padStart(2, "0")}f€`,
-    });
+    })
   } catch (error) {
-    console.error("Transfer error:", error);
-    return NextResponse.json({ error: "Transfer failed. Please try again." }, { status: 500 });
+    console.error("Transfer error:", error)
+    return NextResponse.json({ error: "Transfer failed. Please try again." }, { status: 500 })
   }
 }

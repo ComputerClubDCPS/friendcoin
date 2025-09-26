@@ -116,8 +116,9 @@ ALTER TABLE account_restrictions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE banned_users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE currency_circulation ENABLE ROW LEVEL SECURITY;
 
--- RLS Policies
-CREATE POLICY "Products are viewable by everyone" ON products FOR SELECT USING (is_active = true);
+-- RLS Policie
+
+
 
 CREATE POLICY "Users can view own purchases" ON product_purchases
   FOR SELECT USING (user_id = auth.jwt() ->> 'sub');
