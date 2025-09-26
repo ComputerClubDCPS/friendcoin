@@ -10,21 +10,38 @@ export class FriendCoinSDK {
 
   private async request(endpoint: string, options: RequestInit = {}) {
     const url = `${this.baseUrl}/api${endpoint}`
-    const response = await fetch(url, {
-      ...options,
-      headers: {
-        Authorization: `Bearer ${this.apiKey}`,
-        "Content-Type": "application/json",
-        ...options.headers,
-      },
-    })
 
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ error: "Request failed" }))
-      throw new Error(error.error || `HTTP ${response.status}`)
+    try {
+      const response = await fetch(url, {
+        ...options,
+        headers: {
+          Authorization: `Bearer ${this.apiKey}`,
+          "Content-Type": "application/json",
+          ...options.headers,
+        },
+      })
+
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ error: "Request failed" }))
+        const errorMessage = error.error || `HTTP ${response.status}`
+
+        // Log error details for debugging
+        console.error(`[FriendCoinSDK] Request failed: ${endpoint}`, {
+          status: response.status,
+          error: errorMessage,
+          url,
+        })
+
+        throw new Error(errorMessage)
+      }
+
+      return response.json()
+    } catch (error) {
+      if (error instanceof Error) {
+        throw new Error(`FriendCoin SDK Error: ${error.message}`)
+      }
+      throw new Error(`FriendCoin SDK Error: Unknown error occurred`)
     }
-
-    return response.json()
   }
 
   // Payment Sessions
@@ -126,9 +143,40 @@ export class FriendCoinSDK {
 
   // Webhooks
   verifyWebhook(payload: string, signature: string, secret: string): boolean {
-    // Simple signature verification - in production use proper HMAC
-    const expectedSignature = `sha256=${Buffer.from(payload + secret).toString("base64")}`
-    return signature === expectedSignature
+    try {
+      // Use crypto for better security in production
+      if (typeof crypto !== "undefined" && crypto.subtle) {
+        // For modern environments with Web Crypto API
+        // Note: This is a simplified version - in production use proper HMAC-SHA256
+        const expectedSignature = `sha256=${btoa(payload + secret)}`
+        return signature === expectedSignature
+      } else {
+        // Fallback for older environments
+        const expectedSignature = `sha256=${Buffer.from(payload + secret).toString("base64")}`
+        return signature === expectedSignature
+      }
+    } catch (error) {
+      console.error("[FriendCoinSDK] Webhook verification failed:", error)
+      return false
+    }
+  }
+
+  async healthCheck(): Promise<{ status: string; timestamp: string }> {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/health`)
+      if (response.ok) {
+        return {
+          status: "healthy",
+          timestamp: new Date().toISOString(),
+        }
+      }
+      throw new Error(`Health check failed: ${response.status}`)
+    } catch (error) {
+      return {
+        status: "unhealthy",
+        timestamp: new Date().toISOString(),
+      }
+    }
   }
 }
 

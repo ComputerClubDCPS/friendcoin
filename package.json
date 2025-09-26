@@ -31,7 +31,7 @@
     "@radix-ui/react-tooltip": "^1.0.7",
     "@sentry/nextjs": "latest",
     "@stackframe/stack": "latest",
-    "@supabase/ssr": "^0.1.0",
+    "@supabase/ssr": "latest",
     "@supabase/supabase-js": "latest",
     "@tanstack/react-query": "^5.17.15",
     "@vercel/kv": "latest",
