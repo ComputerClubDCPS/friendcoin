@@ -26,10 +26,15 @@ export default withSentryConfig(nextConfig, {
   // Route browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers
   tunnelRoute: true,
 
+  uploadSourceMaps: !!process.env.SENTRY_AUTH_TOKEN,
+  
   authToken: process.env.SENTRY_AUTH_TOKEN,
 
   // Capture React component names for better debugging
   reactComponentAnnotation: {
     enabled: true,
   },
+
+  hideSourceMaps: true,
+  widenClientFileUpload: true,
 });
