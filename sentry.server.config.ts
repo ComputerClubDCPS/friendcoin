@@ -6,6 +6,9 @@ Sentry.init({
   // Set tracesSampleRate to 1.0 to capture 100% of transactions for tracing
   tracesSampleRate: 1.0,
 
-  // Enable logs to be sent to Sentry
-  enableLogs: true,
+  integrations: [Sentry.consoleLoggingIntegration({ levels: ["log", "warn", "error"] })],
+
+  _experiments: {
+    enableLogs: true,
+  },
 })

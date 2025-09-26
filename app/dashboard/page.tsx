@@ -9,6 +9,7 @@ import { formatCurrency, type CurrencyAmount } from "@/lib/currency"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { CreditCard, Send, Gift, TrendingUp, History, RefreshCw, User, BarChart3 } from "lucide-react"
 import Link from "next/link"
+import * as Sentry from "@sentry/nextjs"
 
 interface UserData {
   balance_friendcoins: number
@@ -56,39 +57,57 @@ export default function DashboardPage() {
     }
   }, [user?.id])
 
-  async function initializeUser() {
-    try {
-      setLoading(true)
-      setError(null)
+  const initializeUser = async () => {
+    if (!user) return
 
-      const response = await fetch("/api/user/initialize", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          stack_user_id: user.id,
-          display_name: user.displayName || null,
-          email: user.primaryEmail || null,
-        }),
-      })
+    setLoading(true)
+    setError(null)
 
-      if (!response.ok) {
-        throw new Error(`Failed to initialize user: ${response.status}`)
-      }
+    Sentry.startSpan(
+      {
+        op: "ui.action",
+        name: "Initialize User",
+      },
+      async (span) => {
+        try {
+          span.setAttribute("user_id", user.id)
+          span.setAttribute("has_display_name", !!user.displayName)
 
-      const data = await response.json()
-      if (data.user) {
-        setUserData(data.user)
-      } else {
-        throw new Error("No user data in response")
-      }
-    } catch (error) {
-      console.error("Error initializing user:", error)
-      setError(`Failed to load user data: ${error instanceof Error ? error.message : "Unknown error"}`)
-    } finally {
-      setLoading(false)
-    }
+          const response = await fetch("/api/user/initialize", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              stack_user_id: user.id,
+              display_name: user.displayName || null,
+              email: user.primaryEmail || null,
+            }),
+          })
+
+          if (!response.ok) {
+            throw new Error(`Failed to initialize user: ${response.status}`)
+          }
+
+          const data = await response.json()
+          if (data.user) {
+            setUserData(data.user)
+            span.setAttribute("initialization_success", true)
+          } else {
+            throw new Error("No user data in response")
+          }
+        } catch (error) {
+          console.error("Error initializing user:", error)
+          Sentry.captureException(error, {
+            tags: { operation: "client_user_initialization" },
+            extra: { user_id: user?.id },
+          })
+          setError(`Failed to load user data: ${error instanceof Error ? error.message : "Unknown error"}`)
+        } finally {
+          setLoading(false)
+        }
+      },
+    )
   }
 
   async function fetchTransactions() {
