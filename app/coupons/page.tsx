@@ -62,7 +62,7 @@ export default function CouponsPage() {
         },
         body: JSON.stringify({
           user_id: user.id,
-          amount: `${friendcoins}.${(friendshipFractions || 0).toString().padStart(2, '0')}f€`,
+          amount: `${friendcoins}.${(friendshipFractions || 0).padStart(2, '0')}f€`,
           description: createForm.description,
           expires_in_hours: Number.parseInt(createForm.expiresIn),
         }),
