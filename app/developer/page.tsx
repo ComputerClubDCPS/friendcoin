@@ -114,7 +114,7 @@ export default function DeveloperPage() {
     setMessage("")
 
     try {
-      const response = await fetch('/api/developer/projects?user_id=?{user.id}', {
+      const response = await fetch(`/api/developer/projects?user_id=?${user.id}`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
