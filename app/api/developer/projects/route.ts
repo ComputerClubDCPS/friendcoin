@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase"
+import {*} from "@sentry/nextjs"
 
 export async function GET(request: NextRequest) {
   try {
