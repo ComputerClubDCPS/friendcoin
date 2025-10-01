@@ -3,7 +3,23 @@ import { createSupabaseServiceClient } from "@/lib/supabase-server"
 import * as Sentry from "@sentry/nextjs"
 
 export async function GET(request: NextRequest) {
+  const checkInId = Sentry.captureCheckIn(
+  {
+    monitorSlug: 'financial-operations-cron',
+    status: 'in_progress',
+  },
+  {
+    schedule: { // Specify your schedule options here
+      type: 'crontab',
+      value: '0 0 * * *',
+    },
+    checkinMargin: 1,
+    maxRuntime: 1,
+    timezone: 'Europe/London',
+  });
+  
   const checkInId = Sentry.captureCheckIn({
+    checkInId,
     monitorSlug: "financial-operations-cron",
     status: "in_progress",
   })
