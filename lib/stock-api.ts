@@ -1,4 +1,4 @@
-const ALPHA_VANTAGE_API_KEY = process.env.ALPHA_VANTAGE_API_KEY
+const proccess.env.ALPHA_VANTAGE_API_KEY = process.env.proccess.env.ALPHA_VANTAGE_API_KEY
 
 export interface StockData {
   symbol: string
@@ -11,13 +11,13 @@ export interface StockData {
 }
 
 export async function searchStocks(query: string): Promise<StockData[]> {
-  if (!ALPHA_VANTAGE_API_KEY) {
+  if (!proccess.env.ALPHA_VANTAGE_API_KEY) {
     throw new Error("Alpha Vantage API key not configured")
   }
 
   try {
     const response = await fetch(
-      `https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords=${encodeURIComponent(query)}&apikey=${ALPHA_VANTAGE_API_KEY}`,
+      `https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords=${encodeURIComponent(query)}&apikey=${proccess.env.ALPHA_VANTAGE_API_KEY}`,
     )
 
     const data = await response.json()
@@ -56,13 +56,13 @@ export async function searchStocks(query: string): Promise<StockData[]> {
 }
 
 export async function getStockPrice(symbol: string): Promise<StockData | null> {
-  if (!ALPHA_VANTAGE_API_KEY) {
+  if (!proccess.env.ALPHA_VANTAGE_API_KEY) {
     throw new Error("Alpha Vantage API key not configured")
   }
 
   try {
     const response = await fetch(
-      `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${ALPHA_VANTAGE_API_KEY}`,
+      `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${proccess.env.ALPHA_VANTAGE_API_KEY}`,
     )
 
     const data = await response.json()
@@ -96,13 +96,13 @@ export async function getStockPrice(symbol: string): Promise<StockData | null> {
 }
 
 export async function getDailyStockData(symbol: string): Promise<any> {
-  if (!ALPHA_VANTAGE_API_KEY) {
+  if (!proccess.env.ALPHA_VANTAGE_API_KEY) {
     throw new Error("Alpha Vantage API key not configured")
   }
 
   try {
     const response = await fetch(
-      `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${symbol}&apikey=${ALPHA_VANTAGE_API_KEY}`,
+      `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${symbol}&apikey=${proccess.env.ALPHA_VANTAGE_API_KEY}`,
     )
 
     const data = await response.json()
