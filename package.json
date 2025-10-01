@@ -6,8 +6,8 @@
     "build": "next build",
     "dev": "next dev",
     "lint": "next lint",
-    "start": "next start",
-    "sentry:sourcemaps": "sentry-cli sourcemaps inject --org archiemtop --project friendcoin-platform .next && sentry-cli sourcemaps upload --org archiemtop --project friendcoin-platform .next"
+    "sentry:sourcemaps": "sentry-cli sourcemaps inject --org archiemtop --project friendcoin-platform .next && sentry-cli sourcemaps upload --org archiemtop --project friendcoin-platform .next",
+    "start": "next start"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.4",
