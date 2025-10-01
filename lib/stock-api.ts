@@ -1,5 +1,3 @@
-const proccess.env.ALPHA_VANTAGE_API_KEY = process.env.proccess.env.ALPHA_VANTAGE_API_KEY
-
 export interface StockData {
   symbol: string
   name: string
