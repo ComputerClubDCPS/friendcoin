@@ -3,7 +3,7 @@ org=archiemtop
 project=friendcoin-platform
 
 [auth]
-token=
+token= process.env.SENTRY_AUTH_TOKEN
 
 [upload]
 include_sources=true
