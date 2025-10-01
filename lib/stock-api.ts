@@ -15,7 +15,7 @@ export async function searchStocks(query: string): Promise<StockData[]> {
 
   try {
     const response = await fetch(
-      `https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords=${encodeURIComponent(query)}&apikey=${proccess.env.ALPHA_VANTAGE_API_KEY}`,
+      `https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords=${encodeURIComponent(query)}&apikey=${process.env.ALPHA_VANTAGE_API_KEY}`,
     )
 
     const data = await response.json()
@@ -54,13 +54,13 @@ export async function searchStocks(query: string): Promise<StockData[]> {
 }
 
 export async function getStockPrice(symbol: string): Promise<StockData | null> {
-  if (!proccess.env.ALPHA_VANTAGE_API_KEY) {
+  if (!process.env.ALPHA_VANTAGE_API_KEY) {
     throw new Error("Alpha Vantage API key not configured")
   }
 
   try {
     const response = await fetch(
-      `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${proccess.env.ALPHA_VANTAGE_API_KEY}`,
+      `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${process.env.ALPHA_VANTAGE_API_KEY}`,
     )
 
     const data = await response.json()
@@ -94,13 +94,13 @@ export async function getStockPrice(symbol: string): Promise<StockData | null> {
 }
 
 export async function getDailyStockData(symbol: string): Promise<any> {
-  if (!proccess.env.ALPHA_VANTAGE_API_KEY) {
+  if (!process.env.ALPHA_VANTAGE_API_KEY) {
     throw new Error("Alpha Vantage API key not configured")
   }
 
   try {
     const response = await fetch(
-      `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${symbol}&apikey=${proccess.env.ALPHA_VANTAGE_API_KEY}`,
+      `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${symbol}&apikey=${process.env.ALPHA_VANTAGE_API_KEY}`,
     )
 
     const data = await response.json()
