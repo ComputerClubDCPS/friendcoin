@@ -26,8 +26,10 @@ export default withSentryConfig(nextConfig, {
   // Route browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers
   tunnelRoute: true,
 
-  uploadSourceMaps: !!process.env.SENTRY_AUTH_TOKEN,
+  // Enable source map uploads for better debugging
+  uploadSourceMaps: true,
   
+  // Use auth token from environment variable
   authToken: process.env.SENTRY_AUTH_TOKEN,
 
   // Capture React component names for better debugging
@@ -35,6 +37,27 @@ export default withSentryConfig(nextConfig, {
     enabled: true,
   },
 
+  // Enhanced source map configuration
   hideSourceMaps: true,
   widenClientFileUpload: true,
+  
+  // Additional debugging options
+  sourcemaps: {
+    disable: false,
+    uploadLegacySourcemaps: true,
+  },
+  
+  // Better release tracking
+  release: {
+    create: true,
+    finalize: true,
+    deploy: {
+      env: process.env.VERCEL_ENV || "development",
+    },
+  },
+  
+  // Enhanced error tracking
+  errorHandler: (error, errorInfo, compilation) => {
+    console.error("Sentry webpack plugin error:", error);
+  },
 });

@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase"
 import * as Sentry from "@sentry/nextjs"
+import { captureDbQuery, enhanceDbError } from "@/lib/sentry-db-monitor"
 
 export async function GET(request: NextRequest) {
   return Sentry.withServerActionInstrumentation(
@@ -15,28 +16,44 @@ export async function GET(request: NextRequest) {
           return NextResponse.json({ error: "User ID required" }, { status: 400 })
         }
 
-        // Get transactions for the user
-        const { data: transactions, error } = await supabaseAdmin
-          .from("transactions")
-          .select(`
-            *,
-            merchant_projects(name)
-          `)
-          .or(`from_user_id.eq.${userId},to_user_id.eq.${userId}`)
-          .order("created_at", { ascending: false })
-          .limit(50)
+        // Get transactions for the user with enhanced monitoring
+        const { data: transactions, error } = await captureDbQuery(
+          "select_with_join",
+          "transactions",
+          () => supabaseAdmin
+            .from("transactions")
+            .select(`
+              *,
+              merchant_projects(name)
+            `)
+            .or(`from_user_id.eq.${userId},to_user_id.eq.${userId}`)
+            .order("created_at", { ascending: false })
+            .limit(50),
+          {
+            operation: "fetch_user_transactions",
+            table: "transactions",
+            userId,
+            queryDetails: {
+              join_table: "merchant_projects",
+              filter_type: "user_transactions",
+              limit: 50,
+              order: "created_at desc"
+            }
+          }
+        )
 
         if (error) {
           console.error("Error fetching transactions:", error)
-          Sentry.captureException(error, {
-            tags: { 
-              operation: "fetch_transactions",
-              user_id: userId 
-            },
-            extra: {
-              supabase_error: error,
-              error_code: error.code,
-              error_message: error.message
+          
+          // Enhanced error monitoring
+          enhanceDbError(error, {
+            operation: "fetch_user_transactions",
+            table: "transactions",
+            userId,
+            queryDetails: {
+              join_table: "merchant_projects",
+              filter_type: "user_transactions",
+              limit: 50
             }
           })
 
