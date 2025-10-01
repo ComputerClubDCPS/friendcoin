@@ -26,8 +26,7 @@ export const supabase = (() => {
 // Server-side Supabase client with service role
 export const supabaseAdmin = (() => {
   if (!supabaseServiceKey) {
-    console.warn("SUPABASE_SERVICE_ROLE_KEY not found, admin client will be limited")
-    return createClient(supabaseUrl, supabaseAnonKey)
+    throw new Error("SUPABASE_SERVICE_ROLE_KEY is required for admin operations. Please set this environment variable.")
   }
 
   return createClient(supabaseUrl, supabaseServiceKey, {
@@ -264,6 +263,144 @@ export type Database = {
           payment_method?: string | null
           transaction_id?: string | null
           external_reference?: string | null
+          expires_at?: string
+          completed_at?: string | null
+          created_at?: string
+        }
+      }
+      merchant_projects: {
+        Row: {
+          id: string
+          user_id: string
+          name: string
+          description: string
+          api_key: string
+          webhook_url: string | null
+          database_url: string
+          account_number: string | null
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          name: string
+          description?: string
+          api_key: string
+          webhook_url?: string | null
+          database_url?: string
+          account_number?: string | null
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          name?: string
+          description?: string
+          api_key?: string
+          webhook_url?: string | null
+          database_url?: string
+          account_number?: string | null
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      merchant_payment_plans: {
+        Row: {
+          id: string
+          project_id: string
+          external_id: string
+          name: string
+          description: string
+          amount_friendcoins: number
+          amount_friendship_fractions: number
+          metadata: any
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          project_id: string
+          external_id: string
+          name: string
+          description?: string
+          amount_friendcoins: number
+          amount_friendship_fractions: number
+          metadata?: any
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          project_id?: string
+          external_id?: string
+          name?: string
+          description?: string
+          amount_friendcoins?: number
+          amount_friendship_fractions?: number
+          metadata?: any
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      merchant_payment_sessions: {
+        Row: {
+          id: string
+          project_id: string
+          payment_plan_id: string
+          session_token: string
+          validation_code: string | null
+          customer_email: string | null
+          customer_name: string | null
+          amount_friendcoins: number
+          amount_friendship_fractions: number
+          return_url: string | null
+          metadata: any
+          status: "pending" | "completed" | "failed" | "expired"
+          transaction_id: string | null
+          expires_at: string
+          completed_at: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          project_id: string
+          payment_plan_id: string
+          session_token: string
+          validation_code?: string | null
+          customer_email?: string | null
+          customer_name?: string | null
+          amount_friendcoins: number
+          amount_friendship_fractions: number
+          return_url?: string | null
+          metadata?: any
+          status?: "pending" | "completed" | "failed" | "expired"
+          transaction_id?: string | null
+          expires_at: string
+          completed_at?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          project_id?: string
+          payment_plan_id?: string
+          session_token?: string
+          validation_code?: string | null
+          customer_email?: string | null
+          customer_name?: string | null
+          amount_friendcoins?: number
+          amount_friendship_fractions?: number
+          return_url?: string | null
+          metadata?: any
+          status?: "pending" | "completed" | "failed" | "expired"
+          transaction_id?: string | null
           expires_at?: string
           completed_at?: string | null
           created_at?: string
