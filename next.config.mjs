@@ -15,7 +15,7 @@ const nextConfig = {
 
 export default withSentryConfig(nextConfig, {
   org: "archiemtop",
-  project: "friendcoin-platform",
+  project: "friendcoin",
 
   // Only print logs for uploading source maps in CI
   silent: !process.env.CI,
@@ -42,10 +42,13 @@ export default withSentryConfig(nextConfig, {
   widenClientFileUpload: true,
   
   // Additional debugging options
-  sourcemaps: {
-    disable: false,
-    uploadLegacySourcemaps: true,
-  },
+      sourcemaps: {
+      disable: false, // Source maps are enabled by default
+      assets: ["**/*.js", "**/*.js.map","**/*.ts", "**/*.ts.map" ], // Specify which files to upload
+      ignore: ["**/node_modules/**"], // Files to exclude
+      deleteSourcemapsAfterUpload: true, // Security: delete after upload
+    },
+
   
   // Better release tracking
   release: {
