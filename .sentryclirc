@@ -1,6 +1,6 @@
 [defaults]
 org=archiemtop
-project=friendcoin-platform
+project=friendcoin
 
 [auth]
 token= process.env.SENTRY_AUTH_TOKEN
