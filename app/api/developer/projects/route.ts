@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { supabaseAdmin } from "@/lib/supabase"
+import { createAuthenticatedSupabaseClient } from "@/lib/supabase-server"
 import * as Sentry from "@sentry/nextjs"
 
 export async function GET(request: NextRequest) {
@@ -7,18 +7,18 @@ export async function GET(request: NextRequest) {
     "developer-projects-get",
     async () => {
       try {
-        const { searchParams } = new URL(request.url)
-        const userId = searchParams.get("user_id")
-
-        if (!userId) {
-          Sentry.captureMessage("Missing user_id parameter in projects fetch", "warning")
-          return NextResponse.json({ error: "User ID required" }, { status: 400 })
+        // Get authenticated user and client
+        const { client: supabase, user } = await createAuthenticatedSupabaseClient()
+        
+        if (!user) {
+          Sentry.captureMessage("Unauthorized projects fetch attempt", "warning")
+          return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
         }
 
-        const { data: projects, error } = await supabaseAdmin
+        const { data: projects, error } = await supabase
           .from("merchant_projects")
           .select("*")
-          .eq("user_id", userId)
+          .eq("user_id", user.id)
           .order("created_at", { ascending: false })
 
         if (error) {
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
           Sentry.captureException(error, {
             tags: { 
               operation: "fetch_projects",
-              user_id: userId 
+              user_id: user.id 
             },
             extra: {
               supabase_error: error,
@@ -87,21 +87,29 @@ export async function POST(request: NextRequest) {
     "developer-projects-post",
     async () => {
       try {
-        const body = await request.json()
-        const { user_id, name, description, webhook_url, database_url, account_number } = body
+        // Get authenticated user and client
+        const { client: supabase, user } = await createAuthenticatedSupabaseClient()
+        
+        if (!user) {
+          Sentry.captureMessage("Unauthorized project creation attempt", "warning")
+          return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+        }
 
-        if (!user_id || !name || !account_number) {
+        const body = await request.json()
+        const { name, description, webhook_url, database_url, account_number } = body
+
+        if (!name || !account_number) {
           Sentry.captureMessage("Missing required fields in project creation", "warning")
-          return NextResponse.json({ error: "User ID, project name, and account number are required" }, { status: 400 })
+          return NextResponse.json({ error: "Project name and account number are required" }, { status: 400 })
         }
 
         // Generate API key
         const apiKey = `fc_${Math.random().toString(36).substring(2, 15)}${Math.random().toString(36).substring(2, 15)}`
 
-        const { data: newProject, error } = await supabaseAdmin
+        const { data: newProject, error } = await supabase
           .from("merchant_projects")
           .insert({
-            user_id,
+            user_id: user.id,
             name: name.trim(),
             description: description?.trim() || "",
             api_key: apiKey,
@@ -118,7 +126,7 @@ export async function POST(request: NextRequest) {
           Sentry.captureException(error, {
             tags: { 
               operation: "create_project",
-              user_id: user_id 
+              user_id: user.id 
             },
             extra: {
               supabase_error: error,
