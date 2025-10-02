@@ -17,12 +17,6 @@ export async function GET(request: NextRequest) {
     maxRuntime: 1,
     timezone: 'Europe/London',
   });
-  
-  const checkInId = Sentry.captureCheckIn({
-    checkInId,
-    monitorSlug: "financial-operations-cron",
-    status: "in_progress",
-  })
 
   return Sentry.startSpan(
     {
