@@ -5,6 +5,7 @@ ALTER TABLE coupons ENABLE ROW LEVEL SECURITY;
 ALTER TABLE api_keys ENABLE ROW LEVEL SECURITY;
 ALTER TABLE investments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE payment_validations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE merchant_projects ENABLE ROW LEVEL SECURITY;
 
 -- Users table policies
 CREATE POLICY "Users can view own data" ON users
@@ -65,3 +66,19 @@ CREATE POLICY "Users can view own payment validations" ON payment_validations
 
 CREATE POLICY "Users can create payment validations" ON payment_validations
   FOR INSERT WITH CHECK (user_id = auth.jwt() ->> 'sub');
+
+-- Merchant projects table policies
+CREATE POLICY "Users can view own merchant projects" ON merchant_projects
+  FOR SELECT USING (user_id = auth.jwt() ->> 'sub');
+
+CREATE POLICY "Users can view all merchant projects for transaction history" ON merchant_projects
+  FOR SELECT USING (true);
+
+CREATE POLICY "Users can create own merchant projects" ON merchant_projects
+  FOR INSERT WITH CHECK (user_id = auth.jwt() ->> 'sub');
+
+CREATE POLICY "Users can update own merchant projects" ON merchant_projects
+  FOR UPDATE USING (user_id = auth.jwt() ->> 'sub');
+
+CREATE POLICY "Users can delete own merchant projects" ON merchant_projects
+  FOR DELETE USING (user_id = auth.jwt() ->> 'sub');

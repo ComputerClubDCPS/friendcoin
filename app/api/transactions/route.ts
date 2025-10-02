@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { supabaseAdmin } from "@/lib/supabase"
+import { createAuthenticatedSupabaseClient } from "@/lib/supabase-server"
 import * as Sentry from "@sentry/nextjs"
 import { captureDbQuery, enhanceDbError } from "@/lib/sentry-db-monitor"
 
@@ -8,31 +8,31 @@ export async function GET(request: NextRequest) {
     "transactions-get",
     async () => {
       try {
-        const { searchParams } = new URL(request.url)
-        const userId = searchParams.get("user_id")
-
-        if (!userId) {
-          Sentry.captureMessage("Missing user_id parameter in transactions request", "warning")
-          return NextResponse.json({ error: "User ID required" }, { status: 400 })
+        // Get authenticated user and client
+        const { client: supabase, user } = await createAuthenticatedSupabaseClient()
+        
+        if (!user) {
+          Sentry.captureMessage("Unauthorized transactions fetch attempt", "warning")
+          return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
         }
 
         // Get transactions for the user with enhanced monitoring
         const { data: transactions, error } = await captureDbQuery(
           "select_with_join",
           "transactions",
-          () => supabaseAdmin
+          () => supabase
             .from("transactions")
             .select(`
               *,
               merchant_projects(name)
             `)
-            .or(`from_user_id.eq.${userId},to_user_id.eq.${userId}`)
+            .or(`from_user_id.eq.${user.id},to_user_id.eq.${user.id}`)
             .order("created_at", { ascending: false })
             .limit(50),
           {
             operation: "fetch_user_transactions",
             table: "transactions",
-            userId,
+            userId: user.id,
             queryDetails: {
               join_table: "merchant_projects",
               filter_type: "user_transactions",
@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
           enhanceDbError(error, {
             operation: "fetch_user_transactions",
             table: "transactions",
-            userId,
+            userId: user.id,
             queryDetails: {
               join_table: "merchant_projects",
               filter_type: "user_transactions",
