@@ -32,6 +32,14 @@ export async function createSupabaseServerClient() {
   )
 }
 
+// Helper function to convert base64 to base64url
+function base64ToBase64Url(base64: string): string {
+  return base64
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=/g, '')
+}
+
 export async function createAuthenticatedSupabaseClient() {
   return Sentry.startSpan(
     {
@@ -84,7 +92,48 @@ export async function createAuthenticatedSupabaseClient() {
         }
       })
 
-      return { client, user }
+        // Create a minimal signature for the JWT (since we're not validating it server-side)
+        // This creates a properly formatted JWT that Supabase can parse
+        const signature = base64ToBase64Url(
+          Buffer.from('fake-signature').toString('base64')
+        )
+
+        const customJWT = `${encodedHeader}.${encodedPayload}.${signature}`
+
+        // Set the session manually for RLS policies
+        await client.auth.setSession({
+          access_token: customJWT,
+          refresh_token: 'fake_refresh_token',
+        })
+
+        // Capture JWT creation for monitoring
+        Sentry.addBreadcrumb({
+          category: 'auth',
+          message: 'Created custom JWT for Supabase RLS',
+          level: 'info',
+          data: {
+            user_id: user.id,
+            jwt_length: customJWT.length,
+            header_claims: Object.keys(header),
+            payload_claims: Object.keys(payload)
+          }
+        })
+
+        return { client, user }
+      } catch (jwtError) {
+        // Enhanced error tracing for JWT creation
+        Sentry.captureException(jwtError, {
+          tags: { 
+            operation: "jwt_creation",
+            user_id: user.id 
+          },
+          extra: {
+            error_message: jwtError instanceof Error ? jwtError.message : 'Unknown JWT error',
+            user_data: { id: user.id }
+          }
+        })
+        throw new Error(`Failed to create JWT for user authentication: ${jwtError instanceof Error ? jwtError.message : 'Unknown error'}`)
+      }
     }
   )
 }
