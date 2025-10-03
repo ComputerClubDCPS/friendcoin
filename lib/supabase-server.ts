@@ -1,4 +1,5 @@
 import { createServerClient } from "@supabase/ssr"
+import { createClient } from "@supabase/supabase-js"
 import { cookies } from "next/headers"
 import * as Sentry from "@sentry/nextjs"
 import { stackServerApp } from "@/stack"
@@ -154,16 +155,7 @@ export async function createSupabaseServiceClient() {
         throw new Error("SUPABASE_SERVICE_ROLE_KEY is required for service operations")
       }
 
-      const client = createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
-        cookies: {
-          getAll() {
-            return []
-          },
-          setAll() {
-            // No-op for service client
-          },
-        },
-      })
+      const client = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
 
       return wrapSupabaseClientWithBreadcrumbs(client)
     },
