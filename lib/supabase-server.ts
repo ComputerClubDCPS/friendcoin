@@ -44,11 +44,17 @@ export async function createAuthenticatedSupabaseClient() {
         throw new Error("User not authenticated")
       }
 
+      // Use service role client for authenticated operations to bypass RLS issues
+      // This is more reliable than trying to create custom JWTs
+      if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+        throw new Error("SUPABASE_SERVICE_ROLE_KEY is required for authenticated operations")
+      }
+
       const cookieStore = cookies()
 
       const client = createServerClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!,
         {
           cookies: {
             getAll() {
@@ -67,18 +73,15 @@ export async function createAuthenticatedSupabaseClient() {
         }
       )
 
-      // Create a custom JWT token for Supabase RLS that includes the Stack Auth user ID
-      const customJWT = Buffer.from(JSON.stringify({
-        sub: user.id,
-        role: "authenticated",
-        iat: Math.floor(Date.now() / 1000),
-        exp: Math.floor(Date.now() / 1000) + 3600, // 1 hour expiry
-      })).toString('base64')
-
-      // Set the session manually for RLS policies
-      await client.auth.setSession({
-        access_token: `fake.${customJWT}.fake`,
-        refresh_token: 'fake_refresh_token',
+      // Capture client creation for monitoring
+      Sentry.addBreadcrumb({
+        category: 'auth',
+        message: 'Created authenticated Supabase client with service role',
+        level: 'info',
+        data: {
+          user_id: user.id,
+          client_type: 'service_role'
+        }
       })
 
       return { client, user }

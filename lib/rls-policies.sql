@@ -6,6 +6,9 @@ ALTER TABLE api_keys ENABLE ROW LEVEL SECURITY;
 ALTER TABLE investments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE payment_validations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE merchant_projects ENABLE ROW LEVEL SECURITY;
+ALTER TABLE developer_products ENABLE ROW LEVEL SECURITY;
+ALTER TABLE product_subscriptions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE product_revenue ENABLE ROW LEVEL SECURITY;
 
 -- Users table policies
 CREATE POLICY "Users can view own data" ON users
@@ -82,3 +85,33 @@ CREATE POLICY "Users can update own merchant projects" ON merchant_projects
 
 CREATE POLICY "Users can delete own merchant projects" ON merchant_projects
   FOR DELETE USING (user_id = auth.jwt() ->> 'sub');
+
+-- Developer products table policies
+CREATE POLICY "Users can view own developer products" ON developer_products
+  FOR SELECT USING (developer_id = auth.jwt() ->> 'sub');
+
+CREATE POLICY "Users can create own developer products" ON developer_products
+  FOR INSERT WITH CHECK (developer_id = auth.jwt() ->> 'sub');
+
+CREATE POLICY "Users can update own developer products" ON developer_products
+  FOR UPDATE USING (developer_id = auth.jwt() ->> 'sub');
+
+CREATE POLICY "Users can delete own developer products" ON developer_products
+  FOR DELETE USING (developer_id = auth.jwt() ->> 'sub');
+
+-- Product subscriptions table policies  
+CREATE POLICY "Users can view their own subscriptions" ON product_subscriptions
+  FOR SELECT USING (user_id = auth.jwt() ->> 'sub' OR developer_id = auth.jwt() ->> 'sub');
+
+CREATE POLICY "Developers can create subscriptions for their products" ON product_subscriptions
+  FOR INSERT WITH CHECK (developer_id = auth.jwt() ->> 'sub');
+
+CREATE POLICY "Users can update their own subscriptions" ON product_subscriptions
+  FOR UPDATE USING (user_id = auth.jwt() ->> 'sub' OR developer_id = auth.jwt() ->> 'sub');
+
+-- Product revenue table policies
+CREATE POLICY "Developers can view their own revenue" ON product_revenue
+  FOR SELECT USING (developer_id = auth.jwt() ->> 'sub');
+
+CREATE POLICY "Developers can create revenue records" ON product_revenue
+  FOR INSERT WITH CHECK (developer_id = auth.jwt() ->> 'sub');
