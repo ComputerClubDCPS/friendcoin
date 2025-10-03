@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { createAuthenticatedSupabaseClient } from "@/lib/supabase-server"
+import { createSupabaseServiceClient } from "@/lib/supabase-server"
+import { stackServerApp } from "@/stack"
 import * as Sentry from "@sentry/nextjs"
 
 export async function GET(request: NextRequest) {
@@ -7,13 +8,16 @@ export async function GET(request: NextRequest) {
     "developer-projects-get",
     async () => {
       try {
-        // Get authenticated user and client
-        const { client: supabase, user } = await createAuthenticatedSupabaseClient()
+        // Get authenticated user from Stack Auth
+        const user = await stackServerApp.getUser()
         
         if (!user) {
           Sentry.captureMessage("Unauthorized projects fetch attempt", "warning")
           return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
         }
+
+        // Use service client to bypass RLS - Stack Auth already handles authentication
+        const supabase = await createSupabaseServiceClient()
 
         const { data: projects, error } = await supabase
           .from("merchant_projects")
@@ -87,13 +91,16 @@ export async function POST(request: NextRequest) {
     "developer-projects-post",
     async () => {
       try {
-        // Get authenticated user and client
-        const { client: supabase, user } = await createAuthenticatedSupabaseClient()
+        // Get authenticated user from Stack Auth
+        const user = await stackServerApp.getUser()
         
         if (!user) {
           Sentry.captureMessage("Unauthorized project creation attempt", "warning")
           return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
         }
+
+        // Use service client to bypass RLS - Stack Auth already handles authentication
+        const supabase = await createSupabaseServiceClient()
 
         const body = await request.json()
         const { name, description, webhook_url, database_url, account_number } = body

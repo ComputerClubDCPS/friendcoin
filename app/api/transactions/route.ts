@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { createAuthenticatedSupabaseClient } from "@/lib/supabase-server"
+import { createSupabaseServiceClient } from "@/lib/supabase-server"
+import { stackServerApp } from "@/stack"
 import * as Sentry from "@sentry/nextjs"
 import { captureDbQuery, enhanceDbError } from "@/lib/sentry-db-monitor"
 
@@ -8,13 +9,16 @@ export async function GET(request: NextRequest) {
     "transactions-get",
     async () => {
       try {
-        // Get authenticated user and client
-        const { client: supabase, user } = await createAuthenticatedSupabaseClient()
+        // Get authenticated user from Stack Auth
+        const user = await stackServerApp.getUser()
         
         if (!user) {
           Sentry.captureMessage("Unauthorized transactions fetch attempt", "warning")
           return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
         }
+
+        // Use service client to bypass RLS - Stack Auth already handles authentication
+        const supabase = await createSupabaseServiceClient()
 
         // Get transactions for the user with enhanced monitoring
         const { data: transactions, error } = await captureDbQuery(
