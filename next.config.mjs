@@ -20,11 +20,11 @@ const nextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live https://*.sentry.io",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live https://*.sentry.io https://*.stack-auth.com https://*.vercel.app https://sentry.io" ,
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: https:",
               "font-src 'self' data:",
-              "connect-src 'self' https://*.sentry.io https://vercel.live wss://vercel.live",
+              "connect-src 'self' https://*.sentry.io https://vercel.live wss://vercel.live https://*.supabase.co https://*.stack-auth.com",
               "frame-src 'self' https://vercel.live",
               "object-src 'none'",
               "base-uri 'self'",
