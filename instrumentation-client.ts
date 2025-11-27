@@ -23,6 +23,13 @@ Sentry.init({
 
   // Enable logs to be sent to Sentry
   enableLogs: true,
+
+  sourcemaps: {
+    disable: false, // Source maps are enabled by default
+    assets: ["**/*.js", "**/*.js.map"], // Specify which files to upload
+    ignore: ["**/node_modules/**"], // Files to exclude
+    deleteSourcemapsAfterUpload: true, // Security: delete after upload
+  },
 })
 
 // This export will instrument router navigations

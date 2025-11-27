@@ -1,4 +1,5 @@
 import { withSentryConfig } from "@sentry/nextjs";
+const { sentryWebpackPlugin } = require("@sentry/webpack-plugin");
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -64,3 +65,21 @@ export default withSentryConfig(nextConfig, {
     console.error("Sentry webpack plugin error:", error);
   },
 });
+
+module.exports = {
+  webpack: (
+    config,
+    { buildId, dev, isServer, defaultLoaders, nextRuntime, webpack }
+  ) => {
+   devtool: "hidden-source-map", // Source map generation must be turned on ("hidden-source-map", "source-map", etc.)
+   plugins: [
+    sentryWebpackPlugin({
+      org: "archiemtop",
+      project: "friendcoin",
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+    }),
+  ],
+    // Important: return the modified config
+    return config
+  },
+}

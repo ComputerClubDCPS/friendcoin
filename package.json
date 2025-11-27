@@ -31,6 +31,7 @@
     "@radix-ui/react-toast": "latest",
     "@radix-ui/react-tooltip": "^1.0.7",
     "@sentry/nextjs": "latest",
+    "@sentry/webpack-plugin": "latest",
     "@stackframe/stack": "latest",
     "@supabase/ssr": "latest",
     "@supabase/supabase-js": "latest",
@@ -57,6 +58,7 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
+    "@sentry/webpack-plugin": "latest",
     "@types/node": "^22",
     "@types/qrcode": "^1.5.5",
     "@types/react": "^18",
