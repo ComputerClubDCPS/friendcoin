@@ -149,7 +149,6 @@ export async function POST(request: NextRequest) {
           },
         })
 
-        // Check if it's a permission/auth error
         if (
           error.code === "PGRST301" ||
           error.message?.includes("permission denied") ||
@@ -164,7 +163,6 @@ export async function POST(request: NextRequest) {
           )
         }
 
-        // Check for duplicate key errors
         if (error.code === "23505" || error.message?.includes("duplicate key")) {
           return NextResponse.json(
             {
@@ -178,21 +176,20 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(
           {
             error: "Failed to create project",
-            details: "Database operation failed",
+            details: error.message || "Database operation failed",
           },
           { status: 500 },
         )
       }
 
-      return NextResponse.json({ project: newProject })
+      return NextResponse.json({ project: newProject, success: true })
     } catch (error) {
       console.error("Project creation error:", error)
       Sentry.captureException(error, {
         tags: { operation: "create_project" },
-        extra: { request_url: request.url },
+        extra: { request_url: request.url, error_message: error instanceof Error ? error.message : String(error) },
       })
 
-      // Check if it's a Supabase configuration error
       if (error instanceof Error && error.message?.includes("SUPABASE_SERVICE_ROLE_KEY")) {
         return NextResponse.json(
           {
@@ -206,7 +203,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error: "Internal server error",
-          details: "Unexpected error occurred",
+          details: error instanceof Error ? error.message : "Unexpected error occurred",
         },
         { status: 500 },
       )

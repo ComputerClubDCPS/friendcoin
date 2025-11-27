@@ -202,7 +202,7 @@ export async function POST(request: NextRequest) {
         {
           from_user_id: user.id,
           to_user_id: recipientId,
-          to_display_name: recipientData.display_name || recipientId,
+          to_display_name: recipientId,
           last_transfer_at: new Date().toISOString(),
           transfer_count: 1,
         },
@@ -222,7 +222,7 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json({
         success: true,
-        message: `Successfully sent ${transferAmount.friendcoins}.${transferAmount.friendshipFractions.toString().padStart(2, "0")}f€ to ${recipientData.display_name || recipientId}`,
+        message: `Successfully sent ${transferAmount.friendcoins}.${transferAmount.friendshipFractions.toString().padStart(2, "0")}f€ to ${recipientId}`,
         tax: `${tax.friendcoins}.${tax.friendshipFractions.toString().padStart(2, "0")}f€`,
       })
     } catch (error) {

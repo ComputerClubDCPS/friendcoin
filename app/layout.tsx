@@ -17,9 +17,6 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <head>
-        <script src="https://amtprojects.statuspage.io/embed/script.js"></script>
-      </head>
       <body>
         <ThemeProvider>
           <StackProvider app={stackServerApp}>

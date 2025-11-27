@@ -10,7 +10,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { CreditCard, Send, Gift, TrendingUp, History, RefreshCw, User, BarChart3 } from "lucide-react"
 import Link from "next/link"
 import * as Sentry from "@sentry/nextjs"
-import { StatusPageWidget } from "@/components/status-page-widget"
 
 interface UserData {
   balance_friendcoins: number
@@ -349,7 +348,7 @@ export default function DashboardPage() {
 
           <TabsContent value="overview" className="space-y-6">
             {/* Service Status Widget */}
-            <Card>
+            {/* <Card>
               <CardHeader>
                 <CardTitle>Service Status</CardTitle>
                 <CardDescription>Real-time system status and incidents</CardDescription>
@@ -357,7 +356,7 @@ export default function DashboardPage() {
               <CardContent>
                 <StatusPageWidget />
               </CardContent>
-            </Card>
+            </Card> */}
 
             <div className="grid md:grid-cols-3 gap-6">
               <Card>
