@@ -11,6 +11,7 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+}
 
 export default withSentryConfig(nextConfig, {
   org: "archiemtop",

@@ -8,8 +8,5 @@
       "path": "/api/cron/market-data",
       "schedule": "0 0 */3 * *"
     }
-  ],
-  "env": {
-    "VERCEL_PREVIEW_FEEDBACK_ENABLED": "0"
-  }
+  ]
 }

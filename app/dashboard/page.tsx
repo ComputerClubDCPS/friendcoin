@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { CreditCard, Send, Gift, TrendingUp, History, RefreshCw, User, BarChart3 } from "lucide-react"
 import Link from "next/link"
 import * as Sentry from "@sentry/nextjs"
+import { StatusPageWidget } from "@/components/status-page-widget"
 
 interface UserData {
   balance_friendcoins: number
@@ -51,6 +52,12 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (user?.id) {
+      Sentry.setUser({
+        id: user.id,
+        username: user.displayName || undefined,
+        email: user.primaryEmail || undefined,
+      })
+
       initializeUser()
       fetchTransactions()
       fetchInvestments()
@@ -337,10 +344,21 @@ export default function DashboardPage() {
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="transactions">Transactions</TabsTrigger>
             <TabsTrigger value="investments">Investments</TabsTrigger>
-            <TabsTrigger value="interest">Interest</TabsTrigger>
+            <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="overview" className="space-y-4">
+          <TabsContent value="overview" className="space-y-6">
+            {/* Service Status Widget */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Service Status</CardTitle>
+                <CardDescription>Real-time system status and incidents</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <StatusPageWidget />
+              </CardContent>
+            </Card>
+
             <div className="grid md:grid-cols-3 gap-6">
               <Card>
                 <CardHeader>
@@ -513,17 +531,17 @@ export default function DashboardPage() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="interest">
+          <TabsContent value="settings">
             <Card>
               <CardHeader>
-                <CardTitle>Interest History</CardTitle>
-                <CardDescription>Your weekly interest payments</CardDescription>
+                <CardTitle>Settings</CardTitle>
+                <CardDescription>Manage your account settings</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                  <TrendingUp className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>No interest payments yet</p>
-                  <p className="text-sm">Interest is calculated weekly based on your balance</p>
+                  <User className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>No settings available yet</p>
+                  <p className="text-sm">Customize your account preferences</p>
                 </div>
               </CardContent>
             </Card>

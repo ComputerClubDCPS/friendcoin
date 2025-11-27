@@ -24,7 +24,6 @@ export default function CouponsPage() {
     expiresIn: "24",
   })
 
-
   // Redeem coupon form
   const [redeemForm, setRedeemForm] = useState({
     code: "",
@@ -62,7 +61,7 @@ export default function CouponsPage() {
         },
         body: JSON.stringify({
           user_id: user.id,
-          amount: `${friendcoins}.${(friendshipFractions || 0).padStart(2, '0')}f€`,
+          amount: `${friendcoins}.${friendshipFractions.toString().padStart(2, "0")}`, // Send as decimal string
           description: createForm.description,
           expires_in_hours: Number.parseInt(createForm.expiresIn),
         }),
@@ -71,8 +70,8 @@ export default function CouponsPage() {
       const data = await response.json()
 
       if (response.ok) {
-        setGeneratedCoupon(data.coupon_code)
-        setMessage(`Coupon created successfully! Code: ${data.code || null}`)
+        setGeneratedCoupon(data.coupon?.code)
+        setMessage(`Coupon created successfully! Code: ${data.coupon?.code}`)
         setCreateForm({ amount: "", description: "", expiresIn: "24" })
       } else {
         setMessage(data.error || "Error creating coupon")

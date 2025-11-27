@@ -1,6 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { createSupabaseServiceClient } from "@/lib/supabase-server"
-import { stackServerApp } from "@/stack"
+import { supabaseAdmin } from "@/lib/supabase"
 import * as Sentry from "@sentry/nextjs"
 import { captureDbQuery, enhanceDbError } from "@/lib/sentry-db-monitor"
 
@@ -9,34 +8,31 @@ export async function GET(request: NextRequest) {
     "transactions-get",
     async () => {
       try {
-        // Get authenticated user from Stack Auth
-        const user = await stackServerApp.getUser()
-        
-        if (!user) {
-          Sentry.captureMessage("Unauthorized transactions fetch attempt", "warning")
-          return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-        }
+        const { searchParams } = new URL(request.url)
+        const userId = searchParams.get("user_id")
 
-        // Use service client to bypass RLS - Stack Auth already handles authentication
-        const supabase = await createSupabaseServiceClient()
+        if (!userId) {
+          Sentry.captureMessage("Missing user_id parameter in transactions request", "warning")
+          return NextResponse.json({ error: "User ID required" }, { status: 400 })
+        }
 
         // Get transactions for the user with enhanced monitoring
         const { data: transactions, error } = await captureDbQuery(
           "select_with_join",
           "transactions",
-          () => supabase
+          () => supabaseAdmin
             .from("transactions")
             .select(`
               *,
               merchant_projects(name)
             `)
-            .or(`from_user_id.eq.${user.id},to_user_id.eq.${user.id}`)
+            .or(`from_user_id.eq.${userId},to_user_id.eq.${userId}`)
             .order("created_at", { ascending: false })
             .limit(50),
           {
             operation: "fetch_user_transactions",
             table: "transactions",
-            userId: user.id,
+            userId,
             queryDetails: {
               join_table: "merchant_projects",
               filter_type: "user_transactions",
@@ -53,7 +49,7 @@ export async function GET(request: NextRequest) {
           enhanceDbError(error, {
             operation: "fetch_user_transactions",
             table: "transactions",
-            userId: user.id,
+            userId,
             queryDetails: {
               join_table: "merchant_projects",
               filter_type: "user_transactions",
